@@ -7,7 +7,8 @@ output:
 
 
 ## Loading and preprocessing the data
-```{r data, echo=TRUE, cache=TRUE}
+
+```r
 unzip("activity.zip", exdir = "./data")
 activity <- read.csv("./data/activity.csv", stringsAsFactors = FALSE)
 activity$date <- as.Date(activity$date, format = "%Y-%m-%d")
@@ -16,7 +17,8 @@ activity$date <- as.Date(activity$date, format = "%Y-%m-%d")
 
 
 ## What is mean total number of steps taken per day?
-```{r mean, echo=TRUE, message=FALSE}
+
+```r
 library(dplyr)
 library(ggplot2)
 steps.day <- activity %>% 
@@ -32,21 +34,34 @@ ggplot() +
   labs(x="Day", y="Total steps", title="Total number of steps taken per day (10/1/2012 - 11/30/2012)")
 ```
 
+![](PA1_template_files/figure-html/mean-1.png)<!-- -->
+
 Total number of steps taken per day
 
 Mean:
-```{r, echo=TRUE}
+
+```r
 mean.steps <- mean(steps.day$total)
 mean.steps
 ```
+
+```
+## [1] 9354.23
+```
 Median:
-```{r, echo=TRUE}
+
+```r
 median.steps <- median(steps.day$total)
 median.steps
 ```
 
+```
+## [1] 10395
+```
+
 ## What is the average daily activity pattern?
-```{r pattern, echo=TRUE, cache=TRUE}
+
+```r
 steps.interval <- activity %>% 
   group_by(interval) %>%
   summarise(avg = mean(steps, na.rm = TRUE))
@@ -57,22 +72,35 @@ ggplot(steps.interval, aes(x=interval, y=avg)) +
   labs(x="Minute", y="Average steps", title="The average number of steps taken across all days (10/1/2012 - 11/30/2012)")
 ```
 
+![](PA1_template_files/figure-html/pattern-1.png)<!-- -->
+
 Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-```{r}
+
+```r
 max.index <- which(steps.interval$avg == max(steps.interval$avg))
 steps.interval$interval[max.index]
+```
+
+```
+## [1] 835
 ```
 
 
 
 ## Imputing missing values
 Total number of rows with NAs
-```{r, echo=TRUE}
+
+```r
 nrow(activity[rowSums(is.na(activity)) > 0,])
 ```
 
+```
+## [1] 2304
+```
+
 Filling in all of the missing values in steps column.
-```{r fill_in_steps, echo=TRUE}
+
+```r
 activity2 <- activity %>% group_by(date) %>% mutate(steps = case_when(
   is.na(steps) ~  as.integer(mean(steps, na.rm = TRUE)), 
   TRUE ~ steps))
@@ -85,13 +113,19 @@ activity2 <- activity2 %>% group_by(date) %>% mutate(steps = case_when(
 Dates were found where all steps records are NA therefore a second na replacement was written.
 
 Filling in all of the missing values in interval column.
-```{r fill_in_interval, echo=TRUE}
+
+```r
 length(which(is.na(activity$interval)))
+```
+
+```
+## [1] 0
 ```
 
 No NAs were found in the interval column
 
-```{r mean2, echo=TRUE, message=FALSE}
+
+```r
 steps.day <- activity2 %>%
   summarise(total = sum(steps))
 
@@ -104,29 +138,50 @@ ggplot() +
   labs(x="Day", y="Total steps", title="Total number of steps taken per day (10/1/2012 - 11/30/2012)")
 ```
 
+![](PA1_template_files/figure-html/mean2-1.png)<!-- -->
+
 Total number of steps taken per day
 
 Mean:
-```{r, echo=TRUE}
+
+```r
 mean(steps.day$total)
 ```
+
+```
+## [1] 9354.23
+```
 Median:
-```{r, echo=TRUE}
+
+```r
 median(steps.day$total)
 ```
+
+```
+## [1] 10395
+```
 ## Are there differences in activity patterns between weekdays and weekends?
-```{r weekdays, echo=TRUE}
+
+```r
 library(timeDate)
 activity <- activity %>% mutate(weekDay = factor(isWeekday(date), levels = c(FALSE,TRUE), labels = c("weekend", "weekday"))) 
 
 steps.interval <- activity %>% 
   group_by(weekDay, interval) %>%
   summarise(avg = mean(steps, na.rm = TRUE))
+```
 
+```
+## `summarise()` has grouped output by 'weekDay'. You can override using the `.groups` argument.
+```
+
+```r
 ggplot(steps.interval, aes(x=interval, y=avg)) +
   geom_line(size=1, col="royalblue4") +
   facet_wrap(weekDay ~ ., nrow = 2, ncol = 1) +
   theme_bw() +
   labs(x="Minute", y="Average steps", title="The average number of steps taken across all days (10/1/2012 - 11/30/2012)")
 ```
+
+![](PA1_template_files/figure-html/weekdays-1.png)<!-- -->
 
